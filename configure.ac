@@ -9,7 +9,9 @@
 # configure the build process.
 #
 
-AC_INIT(fish,2.0.0,fish-users@lists.sf.net)
+AC_PREREQ([2.69])
+AC_INIT([fish],[2.0.0],[fish-users@lists.sf.net])
+AC_CONFIG_SRCDIR([autoload.cpp])
 
 #
 # preserve configure arguments for xsel. This breaks if arguments 
@@ -141,7 +143,7 @@ done
 #
 # Tell autoconf to create config.h header
 #
-AC_CONFIG_HEADERS(config.h)
+AC_CONFIG_HEADERS([config.h])
 
 
 #
@@ -162,9 +164,16 @@ AH_BOTTOM([#if __GNUC__ >= 3
 # Set up various programs needed for install
 #
 
+AC_ISC_POSIX
 AC_PROG_CXX([g++ c++])
+AC_PROG_AWK
+AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+# AX_* macros require the autoconf-archive package
+AX_CHECK_GNU_MAKE
 
 #
 # Optionally drop xsel command
@@ -182,6 +191,7 @@ AC_ARG_WITH(
 )
 
 if [[ "$xsel" = "with_xsel" ]]; then
+  AC_PATH_PROG([EXTERNAL_XSEL],[xsel])
   XSEL=xsel-1.2.0
   XSEL_BIN=$XSEL/xsel
   XSEL_MAN=xsel.1x
@@ -205,6 +215,7 @@ AC_ARG_WITH(
 
 if test x$local_gettext != xno; then
   AC_DEFINE([USE_GETTEXT],[1],[Perform string translations with gettext])
+  AM_GNU_GETTEXT([external])
 fi
 
 
@@ -319,7 +330,11 @@ fi
 # seems that tputs is never really needed.
 #
 
+AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
+AM_INIT_AUTOMAKE
+AM_MAINTAINER_MODE
+AM_SANITY_CHECK
 
 if test $target_cpu = powerpc; then
   AC_DEFINE([TPUTS_KLUDGE],[1],[Evil kludge to get Power based machines to work])
@@ -542,8 +557,12 @@ LIBS=$LIBS_COMMON
 #
 # Check presense of various header files
 #
+AC_HEADER_STDC
+AC_CHECK_HEADERS([curses.h execinfo.h fcntl.h getopt.h libintl.h limits.h locale.h ncurses/term.h ncurses.h siginfo.h spawn.h stropts.h sys/ioctl.h sys/param.h sys/resource.h sys/select.h sys/socket.h sys/termios.h sys/time.h term.h termio.h termios.h wchar.h wctype.h])
 
-AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h ncurses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h sys/termios.h libintl.h execinfo.h spawn.h])
+# gt_* macros require gettext
+gt_TYPE_WCHAR_T
+gt_TYPE_WINT_T
 
 AC_CHECK_HEADER(
   [regex.h],
@@ -557,6 +576,16 @@ AC_CHECK_HEADER(
   [AC_MSG_ERROR([Could not find the header regex.h, needed to build fish])]
 )
 
+# Checks for typedefs, structures, and compiler characteristics.
+AC_CHECK_HEADER_STDBOOL
+AC_C_INLINE
+AC_TYPE_MODE_T
+AC_TYPE_OFF_T
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_TYPE_SSIZE_T
+AC_TYPE_UINT32_T
+AC_CHECK_TYPES([ptrdiff_t])
 
 #
 # On some platforms (Solaris 10) adding -std=c99 in turn requires that
@@ -683,12 +712,14 @@ fi
 #
 # Check for presense of various functions used by fish
 #
-
-AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp fwprintf )
-AC_CHECK_FUNCS( futimes wcwidth wcswidth wcstok fputwc fgetwc )
-AC_CHECK_FUNCS( wcstol wcslcat wcslcpy lrand48_r killpg gettext )
-AC_CHECK_FUNCS( dcgettext backtrace backtrace_symbols sysconf )
-AC_CHECK_FUNCS( getifaddrs )
+AC_FUNC_ERROR_AT_LINE
+AC_FUNC_FORK
+AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
+AC_FUNC_MALLOC
+AC_FUNC_MBRTOWC
+AC_FUNC_MMAP
+AC_FUNC_REALLOC
+AC_CHECK_FUNCS([backtrace backtrace_symbols btowc bzero dcgettext dup2 endpwent fgetwc fputwc futimes fwprintf getcwd gethostname getifaddrs gettext gettimeofday killpg lrand48_r memchr memset mkdir munmap pathconf realpath regcomp select setlocale socket strchr strdup strerror strrchr strstr strtol sysconf wcsdup wcsndup wcslen wcscasecmp wcslcat wcslcpy wcsncasecmp wcstok wcstol wcswidth wcwidth])
 
 #
 # The Makefile also needs to know if we have gettext, so it knows if
@@ -918,7 +949,7 @@ case $target_os in
 esac
 
 # Tell the world what we know
-AC_CONFIG_FILES([Makefile fish.spec])
+AC_CONFIG_FILES([Makefile fish.spec po/Makefile.in])
 AC_OUTPUT
 
 if test ! x$local_found_posix_switch = xyes; then
@@ -928,8 +959,10 @@ fi
 
 if [[ "$xsel" = "with_xsel" ]]; then
   echo "Now configure xsel with $conf_arg"
-  rm -rf $XSEL
-  tar xf $XSEL.tar.gz
+  if test ! -d $XSEL ; then
+    rm -rf $XSEL
+    tar xf $XSEL.tar.gz
+  fi
   cd $XSEL && ./configure $conf_arg
 fi
 echo "fish is now configured."

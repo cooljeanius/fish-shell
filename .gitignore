@@ -1,14 +1,16 @@
 *.o
 *~
+*DS_Store*
+*.xcuser*
 
 Doxyfile.help
 Makefile
-autom4te.cache/
+*.cache
 command_list.txt
 confdefs.h
 config.h
 config.h.in
-config.log
+*.log
 config.status
 configure
 doc.h
@@ -25,9 +27,11 @@ mimedb
 seq
 set_color
 share/config.fish
-share/man/
+share/man/*
+stamp-h1
 toc.txt
-user_doc/
-xsel-1.2.0/
+user_doc/*
 tests/*tmp.*
 tests/foo.txt
+stamp-h1
+libtool
