@@ -873,7 +873,9 @@ clean-local:
 	fi
 	rm -rf fish-@PACKAGE_VERSION@
 	rm -f $(TRANSLATIONS)
-	test ! -d "$(XSEL)" || make -C $(XSEL) clean
+	if test -d "$(XSEL)" -a test -f $(XSEL)/Makefile; then \
+	  make -C $(XSEL) clean; \
+	fi
 .PHONY: clean-local
 
 
