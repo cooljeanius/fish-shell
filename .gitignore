@@ -18,6 +18,9 @@ doc.h
 doc_src/commands.hdr
 doc_src/index.hdr
 po/*.gmo
+po/Makefile.in
+po/POTFILES
+po/remove-potcdate.sed
 fish
 fish.spec
 fish_indent
@@ -36,3 +39,4 @@ tests/*tmp.*
 tests/foo.txt
 stamp-h1
 libtool
+xsel-1.2.0/*
