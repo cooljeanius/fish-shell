@@ -5,6 +5,7 @@
 
 Doxyfile.help
 Makefile
+Makefile_orig
 *.cache
 command_list.txt
 confdefs.h

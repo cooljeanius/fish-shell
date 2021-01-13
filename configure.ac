@@ -9,9 +9,11 @@
 # configure the build process.
 #
 
-AC_PREREQ([2.69])
+AC_PREREQ([2.70])
 AC_INIT([fish],[2.0.0],[fish-users@lists.sf.net])
 AC_CONFIG_SRCDIR([autoload.cpp])
+AC_CONFIG_AUX_DIR([build-aux])
+AC_CONFIG_MACRO_DIR([m4])dnl
 
 #
 # preserve configure arguments for xsel. This breaks if arguments 
@@ -24,22 +26,22 @@ conf_arg=$@
 # List of output variables produced by this configure script
 #
 
-AC_SUBST(docdir)
-AC_SUBST(HAVE_GETTEXT)
-AC_SUBST(LDFLAGS_FISH)
-AC_SUBST(LIBS_FISH)
-AC_SUBST(LIBS_FISH_INDENT)
-AC_SUBST(LIBS_FISH_PAGER)
-AC_SUBST(LIBS_FISHD)
-AC_SUBST(LIBS_MIMEDB)
-AC_SUBST(LIBS_SET_COLOR)
-AC_SUBST(localedir)
-AC_SUBST(optbindirs)
-AC_SUBST(prefix)
-AC_SUBST(XSEL)
-AC_SUBST(XSEL_MAN)
-AC_SUBST(XSEL_BIN)
-AC_SUBST(XSEL_MAN_PATH)
+AC_SUBST([docdir])dnl
+AC_SUBST([HAVE_GETTEXT])dnl
+AC_SUBST([LDFLAGS_FISH])dnl
+AC_SUBST([LIBS_FISH])dnl
+AC_SUBST([LIBS_FISH_INDENT])dnl
+AC_SUBST([LIBS_FISH_PAGER])dnl
+AC_SUBST([LIBS_FISHD])dnl
+AC_SUBST([LIBS_MIMEDB])dnl
+AC_SUBST([LIBS_SET_COLOR])dnl
+AC_SUBST([localedir])dnl
+AC_SUBST([optbindirs])dnl
+AC_SUBST([prefix])dnl
+AC_SUBST([XSEL])dnl
+AC_SUBST([XSEL_MAN])dnl
+AC_SUBST([XSEL_BIN])dnl
+AC_SUBST([XSEL_MAN_PATH])dnl
 
 
 
@@ -112,29 +114,29 @@ fi
 
 for i in /usr/pkg /sw /opt /opt/local /usr/local; do
 
-  AC_MSG_CHECKING([for $i/include include directory])
-  if test -d $i/include; then
-    AC_MSG_RESULT(yes)
-    CXXFLAGS="$CXXFLAGS -I$i/include/"
-    CFLAGS="$CFLAGS -I$i/include/"
+  AC_MSG_CHECKING([for ${i}/include include directory])
+  if test -d ${i}/include; then
+    AC_MSG_RESULT([yes])
+    CXXFLAGS="${CXXFLAGS} -I${i}/include/"
+    CFLAGS="${CFLAGS} -I${i}/include/"
   else
-  AC_MSG_RESULT(no)
+    AC_MSG_RESULT([no])
   fi
 
-  AC_MSG_CHECKING([for $i/lib library directory])
-  if test -d $i/lib; then
-    AC_MSG_RESULT(yes)
-    LDFLAGS="$LDFLAGS -L$i/lib/ -Wl,-rpath,$i/lib/"
+  AC_MSG_CHECKING([for ${i}/lib library directory])
+  if test -d ${i}/lib; then
+    AC_MSG_RESULT([yes])
+    LDFLAGS="${LDFLAGS} -L${i}/lib/ -Wl,-rpath,${i}/lib/"
   else
-    AC_MSG_RESULT(no)
+    AC_MSG_RESULT([no])
   fi
 
-  AC_MSG_CHECKING([for $i/bin command directory])
-  if test -d $i/bin; then
-    AC_MSG_RESULT(yes)
-    optbindirs="$optbindirs $i/bin"
+  AC_MSG_CHECKING([for ${i}/bin command directory])
+  if test -d ${i}/bin; then
+    AC_MSG_RESULT([yes])
+    optbindirs="${optbindirs} ${i}/bin"
   else
-    AC_MSG_RESULT(no)
+    AC_MSG_RESULT([no])
   fi
 
 done
@@ -143,7 +145,7 @@ done
 #
 # Tell autoconf to create config.h header
 #
-AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_HEADERS([config.h])dnl
 
 
 #
@@ -157,17 +159,21 @@ AH_BOTTOM([#if __GNUC__ >= 3
 #else
 #define __warn_unused
 #define __sentinel
-#endif])
+#endif])dnl
 
 
 #
 # Set up various programs needed for install
 #
 
-AC_ISC_POSIX
+AC_SEARCH_LIBS([strerror],[cposix])
 AC_PROG_CXX([g++ c++])
-AC_PROG_AWK
-AC_PROG_CC
+if test "x${CC}" = "x"; then
+  test -z "${CC}"
+  AC_PROG_CC
+else
+  test -n "${CC}" && export CC
+fi
 AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_LN_S
@@ -180,22 +186,20 @@ AX_CHECK_GNU_MAKE
 #
 
 AC_ARG_WITH(
-  xsel,
-  AC_HELP_STRING(
-    [--without-xsel],
-    [do not build the xsel program needed for X clipboard integration.
-     If build xsel, it will be configured with the same options as fish.]
-  ),
-  [xsel=$withval],
-  [xsel=with_xsel]
-)
+  [xsel],
+  [AS_HELP_STRING([--without-xsel],
+      [do not build the xsel program needed for X clipboard integration.
+       If build xsel, it will be configured with the same options as fish.
+  ])],
+  [xsel=${withval}],
+  [xsel=with_xsel])dnl
 
 if [[ "$xsel" = "with_xsel" ]]; then
   AC_PATH_PROG([EXTERNAL_XSEL],[xsel])
   XSEL=xsel-1.2.0
-  XSEL_BIN=$XSEL/xsel
+  XSEL_BIN=${XSEL}/xsel
   XSEL_MAN=xsel.1x
-  XSEL_MAN_PATH=$XSEL/xsel.1x
+  XSEL_MAN_PATH=${XSEL}/xsel.1x
 fi
 
 
@@ -204,19 +208,20 @@ fi
 #
 
 AC_ARG_WITH(
-  gettext,
-  AC_HELP_STRING(
-    [--without-gettext],
-    [do not translate messages, even if gettext is available]
-  ),
-  [local_gettext=$withval],
-  [local_gettext=yes]
-)
+  [gettext],
+  [AS_HELP_STRING([--without-gettext],
+                  [do not translate messages, even if gettext is available
+  ])],
+  [local_gettext=${withval}],
+  [local_gettext=yes])dnl
 
-if test x$local_gettext != xno; then
+if test "x${local_gettext}" != "xno"; then
   AC_DEFINE([USE_GETTEXT],[1],[Perform string translations with gettext])
-  AM_GNU_GETTEXT([external])
 fi
+
+# These need to be done unconditionally to ensure autoreconf works:
+AM_GNU_GETTEXT([external])
+AM_GNU_GETTEXT_VERSION([0.19.8])
 
 
 #
@@ -225,14 +230,14 @@ fi
 # other systems, this should do nothing. (Hopefully)
 #
 
-CXXFLAGS="$CXXFLAGS -D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64"
+CXXFLAGS="${CXXFLAGS} -D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64"
 
 #
 # If we are using gcc, set some flags that increase the odds of the
 # compiler producing a working binary...
 #
 
-if test "$GCC" = yes; then
+if test "${GCC}" = yes; then
 
   #
   # -fno-optimize-sibling-calls seems to work around a bug where
@@ -263,14 +268,14 @@ if test "$GCC" = yes; then
   #
 
   # Some day...
-  CXXFLAGS="$CXXFLAGS -Wall"
+  CXXFLAGS="${CXXFLAGS} -Wall"
 
   #
   # This is needed in order to get the really cool backtraces on Linux
   #
 
-  if test `uname` != "Darwin"; then
-    LDFLAGS_FISH="$LDFLAGS_FISH -rdynamic"
+  if test "x`uname`" != "xDarwin"; then
+    LDFLAGS_FISH="${LDFLAGS_FISH} -rdynamic"
   fi
 
 fi
@@ -300,8 +305,8 @@ AC_RUN_IFELSE(
     )
   ],
   [glibc=yes],
-  [glibc=no]
-)
+  [glibc=no],
+  [glibc=maybe])dnl
 
 if test "$glibc" = yes; then
   AC_MSG_RESULT(yes)
@@ -332,7 +337,7 @@ fi
 
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([foreign])
 AM_MAINTAINER_MODE
 AM_SANITY_CHECK
 
@@ -557,8 +562,35 @@ LIBS=$LIBS_COMMON
 #
 # Check presense of various header files
 #
-AC_HEADER_STDC
-AC_CHECK_HEADERS([curses.h execinfo.h fcntl.h getopt.h libintl.h limits.h locale.h ncurses/term.h ncurses.h siginfo.h spawn.h stropts.h sys/ioctl.h sys/param.h sys/resource.h sys/select.h sys/socket.h sys/termios.h sys/time.h term.h termio.h termios.h wchar.h wctype.h])
+dnl# autoupdate says:
+dnl# The preprocessor macro `STDC_HEADERS' is obsolete.
+dnl# Except in unusual embedded environments, you can safely include all
+dnl# ISO C90 headers unconditionally.
+# Autoupdate added the next few lines to ensure that your configure
+# script's behavior did not change.  They are probably safe to remove.
+AC_CHECK_INCLUDES_DEFAULT
+if test "x${EGREP}" = "x"; then
+  test -z "${EGREP}"
+  AC_PROG_EGREP
+fi
+AC_CHECK_HEADERS([curses.h execinfo.h fcntl.h getopt.h libintl.h limits.h \
+                  locale.h ncurses/term.h ncurses.h siginfo.h spawn.h \
+                  stropts.h sys/ioctl.h sys/resource.h sys/select.h \
+                  sys/socket.h sys/termios.h sys/time.h term.h termio.h \
+                  termios.h wchar.h wctype.h])dnl
+
+if test "x${ac_cv_header_stdint_h}" = "x"; then
+  test -z "${ac_cv_header_stdint_h}"
+  AC_CHECK_HEADERS([stdint.h])
+fi
+if test "x${ac_cv_header_sys_param_h}" = "x"; then
+  test -z "${ac_cv_header_sys_param_h}"
+  AC_CHECK_HEADERS([sys/param.h])
+fi
+if test "x${ac_cv_header_unistd_h}" = "x"; then
+  test -z "${ac_cv_header_unistd_h}"
+  AC_CHECK_HEADERS([unistd.h])
+fi
 
 # gt_* macros require gettext
 gt_TYPE_WCHAR_T
@@ -585,7 +617,7 @@ AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
 AC_TYPE_UINT32_T
-AC_CHECK_TYPES([ptrdiff_t])
+AC_CHECK_TYPES([ptrdiff_t])dnl
 
 #
 # On some platforms (Solaris 10) adding -std=c99 in turn requires that
@@ -623,8 +655,8 @@ local_found_posix_switch=no
 
 for i in "" "-D_POSIX_C_SOURCE=200112L" "-D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=200112L"; do
 
-  AC_MSG_CHECKING( if switches \"$i\" works)
-  CFLAGS="$XCFLAGS $i"
+  AC_MSG_CHECKING([if switches "$i" works])
+  CFLAGS="${XCFLAGS} ${i}"
 
   #
   # Try to run this program, which should test various extensions
@@ -632,8 +664,7 @@ for i in "" "-D_POSIX_C_SOURCE=200112L" "-D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=2
   # should work. Hopefully.
   #
 
-  AC_TRY_LINK(
-    [
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
       #include <stdlib.h>
       #include <stdio.h>
       #include <sys/types.h>
@@ -662,8 +693,7 @@ for i in "" "-D_POSIX_C_SOURCE=200112L" "-D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=2
       /* As above (under at least Linux and FreeBSD). */
       #include <sys/ioctl.h>
       #endif
-    ],
-    [
+    ]], [[
       /* Avert high-level optimisation, by making the program's
        * return value depend on all tested identifiers. */
       long ret = 0;
@@ -683,10 +713,7 @@ for i in "" "-D_POSIX_C_SOURCE=200112L" "-D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=2
       }
       return ret;
 
-    ],
-    local_cv_use__posix_c_source=yes,
-    local_cv_use__posix_c_source=no,
-  )
+    ]])],[local_cv_use__posix_c_source=yes],[local_cv_use__posix_c_source=no])
 
   if test x$local_cv_use__posix_c_source = xyes; then
     AC_MSG_RESULT( yes )
@@ -705,7 +732,7 @@ done
 #
 
 if test ! x$local_found_posix_switch = xyes; then
-  CFLAGS="$XCFLAGS"
+  CFLAGS="${XCFLAGS}"
 fi
 
 
@@ -719,15 +746,23 @@ AC_FUNC_MALLOC
 AC_FUNC_MBRTOWC
 AC_FUNC_MMAP
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([backtrace backtrace_symbols btowc bzero dcgettext dup2 endpwent fgetwc fputwc futimes fwprintf getcwd gethostname getifaddrs gettext gettimeofday killpg lrand48_r memchr memset mkdir munmap pathconf realpath regcomp select setlocale socket strchr strdup strerror strrchr strstr strtol sysconf wcsdup wcsndup wcslen wcscasecmp wcslcat wcslcpy wcsncasecmp wcstok wcstol wcswidth wcwidth])
+AC_CHECK_FUNCS([backtrace backtrace_symbols btowc bzero dcgettext dup2 \
+                endpwent fgetwc fputwc futimes fwprintf getcwd gethostname \
+                getifaddrs gettimeofday killpg lrand48_r memchr memset mkdir \
+                munmap pathconf realpath regcomp select setlocale socket \
+                strchr strdup strerror strrchr strstr strtol sysconf wcsdup \
+                wcsndup wcslen wcscasecmp wcslcat wcslcpy wcsncasecmp wcstok \
+                wcstol wcswidth wcwidth])dnl
+
+AC_CHECK_FUNCS_ONCE([gettext])dnl
 
 #
 # The Makefile also needs to know if we have gettext, so it knows if
 # the translations should be installed.
 #
 
-if test x$local_gettext != xno; then
-  AC_CHECK_FUNC( gettext, HAVE_GETTEXT=1, HAVE_GETTEXT=0 )
+if test "x${local_gettext}" != "xno"; then
+  AC_CHECK_FUNC([gettext],[HAVE_GETTEXT=1],[HAVE_GETTEXT=0])
 fi
 
 #
@@ -759,8 +794,8 @@ AC_RUN_IFELSE(
     )
   ],
   [have_realpath_null=yes],
-  [have_realpath_null=no]
-)
+  [have_realpath_null=no],
+  [have_realpath_null=maybe])dnl
 
 if test "$have_realpath_null" = yes; then
   AC_MSG_RESULT(yes)
@@ -836,28 +871,26 @@ if test "$ac_cv_func_fwprintf" = yes; then
     [
       AC_MSG_RESULT([yes])
       AC_DEFINE([HAVE_BROKEN_FWPRINTF], [1], [Define to 1 one if the implemented fwprintf is broken])
-    ]
-  )
+    ],
+    [
+      AC_MSG_WARN([cannot check for broken fwprintf when cross-compiling])
+    ])
 
 fi
 
 
 # Check for _nl_msg_cat_cntr symbol
 AC_MSG_CHECKING([for _nl_msg_cat_cntr symbol])
-AC_TRY_LINK(
-  [
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
     #if HAVE_LIBINTL_H
     #include <libintl.h>
     #endif
-  ],
-  [
+  ]], [[
     extern int  _nl_msg_cat_cntr;
     int tmp = _nl_msg_cat_cntr;
     exit(tmp);
-  ],
-  have__nl_msg_cat_cntr=yes,
-  have__nl_msg_cat_cntr=no
-)
+  ]])],[have__nl_msg_cat_cntr=yes],[have__nl_msg_cat_cntr=no
+])
 if test "$have__nl_msg_cat_cntr" = yes; then
   AC_MSG_RESULT(yes)
   AC_DEFINE(
@@ -871,18 +904,14 @@ fi
 
 # Check for __environ symbol
 AC_MSG_CHECKING([for __environ symbol])
-AC_TRY_LINK(
-  [
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
     #include <unistd.h>
-  ],
-  [
+  ]], [[
     extern char **__environ;
     char **tmp = __environ;
     exit(tmp!=0);
-  ],
-  have___environ=yes,
-  have___environ=no
-)
+  ]])],[have___environ=yes],[have___environ=no
+])
 if test "$have___environ" = yes; then
   AC_MSG_RESULT(yes)
   AC_DEFINE(
@@ -896,13 +925,11 @@ fi
 
 # Check if getopt_long exists and works
 AC_MSG_CHECKING([if getopt_long exists and works])
-AC_TRY_LINK(
-  [
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
     #if HAVE_GETOPT_H
     #include <getopt.h>
     #endif
-  ],
-  [
+  ]], [[
     static struct option
       long_options[] =
       {
@@ -915,10 +942,8 @@ AC_TRY_LINK(
                  long_options,
                  0 );
 
-  ],
-  have_working_getopt_long=yes,
-  have_working_getopt_long=no
-)
+  ]])],[have_working_getopt_long=yes],[have_working_getopt_long=no
+])
 if test "$have_working_getopt_long" = yes; then
   AC_MSG_RESULT(yes)
   AC_DEFINE(
@@ -949,21 +974,25 @@ case $target_os in
 esac
 
 # Tell the world what we know
-AC_CONFIG_FILES([Makefile fish.spec po/Makefile.in])
+AC_CONFIG_FILES([Makefile Makefile_orig fish.spec po/Makefile.in])
 AC_OUTPUT
 
 if test ! x$local_found_posix_switch = xyes; then
-  echo "Can't find a combination of switches to enable common extensions like detecting window size."
+  echo "Cannot find a combination of switches to enable common extensions like detecting window size."
   echo "Some fish features may be disabled."
 fi
 
-if [[ "$xsel" = "with_xsel" ]]; then
-  echo "Now configure xsel with $conf_arg"
-  if test ! -d $XSEL ; then
-    rm -rf $XSEL
+if [[ "${xsel}" = "with_xsel" ]]; then
+  echo "Now configure xsel with \"${conf_arg}\""
+  if test ! -d ${XSEL}; then
+    rm -rf ${XSEL}
     tar xf $XSEL.tar.gz
   fi
-  cd $XSEL && ./configure $conf_arg
+  if test -d ${XSEL} -a -x ${XSEL}/configure; then
+    cd ${XSEL} && ./configure ${conf_arg}
+  else
+    echo "You will have to do this manually."
+  fi
 fi
 echo "fish is now configured."
 echo "Use 'make' and 'make install' to build and install fish."

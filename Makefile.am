@@ -1,4 +1,5 @@
-ACLOCAL_AMFLAGS = -I m4
+ACLOCAL_AMFLAGS = -I m4 --install
+SUBDIRS = po
 # Copyright (C) 2005-2006 Axel Liljencrantz
 #
 # This program is free software; you can redistribute it and/or modify
@@ -241,8 +242,8 @@ FUNCTIONS_DIR_FILES := $(wildcard share/functions/*.fish)
 # Programs to install
 #
 
-SIMPLE_PROGRAMS := fish set_color mimedb fish_pager fishd fish_indent
-PROGRAMS := $(SIMPLE_PROGRAMS) @XSEL_BIN@
+FISH_SIMPLE_PROGS := fish set_color mimedb fish_pager fishd fish_indent
+FISH_PROGS := $(FISH_SIMPLE_PROGS) @XSEL_BIN@
 
 
 #
@@ -250,7 +251,7 @@ PROGRAMS := $(SIMPLE_PROGRAMS) @XSEL_BIN@
 #
 
 MANUALS := $(addsuffix .1, $(addprefix share/man/man1/,	\
-	$(SIMPLE_PROGRAMS))) @XSEL_MAN_PATH@
+	$(FISH_SIMPLE_PROGS))) @XSEL_MAN_PATH@
 
 
 #
@@ -272,10 +273,10 @@ XSEL_BIN := @XSEL_BIN@
 # Make everything needed for installing fish
 #
 
-all: $(PROGRAMS) user_doc share/man $(TRANSLATIONS)
+all-local: $(FISH_PROGS) user_doc share/man $(TRANSLATIONS)
 	@echo fish has now been built.
 	@echo Use \'$(MAKE) install\' to install fish.
-.PHONY: all
+.PHONY: all-local
 
 
 #
@@ -283,11 +284,13 @@ all: $(PROGRAMS) user_doc share/man $(TRANSLATIONS)
 # when the source code for the build configuration has changed.
 #
 
-configure: configure.ac
+regen_configure: configure.ac
 	./config.status --recheck
+.PHONY: regen_configure
 
-Makefile: Makefile.in configure
+regen_Makefile: Makefile.in configure
 	./config.status
+.PHONY: regen_Makefile
 
 
 #
@@ -336,7 +339,7 @@ doc/refman.pdf: doc
 # This target runs both the low level code tests and the high level script tests.
 #
 
-test: $(PROGRAMS) fish_tests
+test: $(FISH_PROGS) fish_tests
 	./fish_tests; cd tests; ../fish <test.fish;
 .PHONY: test
 
@@ -502,27 +505,27 @@ share/man: $(HELP_SRC)
 
 check-uninstall:
 	if test -f $(DESTDIR)$(sysconfdir)/fish.d/fish_function.fish -o -f $(DESTDIR)$(sysconfdir)/fish.d/fish_complete.fish; then \
-		echo;\
-		echo ERROR;\
-		echo;\
+		echo ""; \
+		echo ERROR; \
+		echo ""; \
 		echo An older fish installation using an incompatible filesystem hierarchy was detected;\
 		echo You must uninstall this fish version before proceeding;\
 		echo type \'$(MAKE) uninstall-legacy\' to uninstall these files,;\
 		echo or type \'$(MAKE) force-install\' to force installation.;\
 		echo The latter may result in a broken installation.;\
-		echo;\
-		false;\
+		echo ""; \
+		false; \
 	fi;
 	if test -f $(DESTDIR)$(sysconfdir)/fish; then \
-		echo;\
+		echo ""; \
 		echo ERROR;\
-		echo;\
+		echo ""; \
 		echo An older fish installation using an incompatible filesystem hierarchy was detected;\
 		echo You must remove the file $(DESTDIR)$(sysconfdir)/fish before proceeding;\
 		echo type \'$(MAKE) uninstall-legacy\' to uninstall this file,;\
 		echo or remove it manually using \'rm $(DESTDIR)$(sysconfdir)/fish\'.;\
-		echo;\
-		false;\
+		echo ""; \
+		false; \
 	fi;
 .PHONY: check-uninstall
 
@@ -553,29 +556,30 @@ install-sh:
 # Try to install after checking for incompatible installed versions.
 #
 
-install: all cleanup_old_seq install-sh check-uninstall install-force
-.PHONY: install
+install-all: all cleanup_old_seq install-sh check-uninstall install-force
+.PHONY: install-all
 
 #
 # Xcode install
 #
 xcode-install:
-	rm -Rf /tmp/fish_build;\
-	xcodebuild install DSTROOT=/tmp/fish_build;\
+	rm -Rf /tmp/fish_build; \
+	xcodebuild install DSTROOT=/tmp/fish_build; \
 	ditto /tmp/fish_build /
 .PHONY: xcode-install
 
 #
 # Force installation, even in presense of incompatible previous
 # version. This may fail.
-# These 'true' lines are to prevent installs from failing for (e.g.) missing man pages.
+# These 'true' lines are to prevent installs from failing for (e.g.) missing
+# man pages.
 #
 
 install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(bindir)
-	for i in $(PROGRAMS); do\
-		$(INSTALL) -m 755 $$i $(DESTDIR)$(bindir) ; \
-		true ;\
+	for i in $(FISH_PROGS); do\
+		$(INSTALL) -m 755 $$i $(DESTDIR)$(bindir); \
+		true; \
 	done;
 	$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish
@@ -585,8 +589,8 @@ install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config/sample_prompts
-	$(INSTALL) -m 644 etc/config.fish                  $(DESTDIR)$(sysconfdir)/fish/
-	$(INSTALL) -m 644 share/config.fish                $(DESTDIR)$(datadir)/fish/
+	$(INSTALL) -m 644 etc/config.fish        $(DESTDIR)$(sysconfdir)/fish/
+	$(INSTALL) -m 644 share/config.fish         $(DESTDIR)$(datadir)/fish/
 	for i in $(COMPLETIONS_DIR_FILES:%='%'); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/completions/; \
 		true; \
@@ -629,15 +633,15 @@ install-force: all install-translations
 	done;
 	@echo fish is now installed on your system.
 	@echo To run fish, type \'fish\' in your terminal.
-	@echo
+	@echo ""
 	@echo To use fish as your login shell:
 	@echo \* add the line \'$(DESTDIR)$(bindir)/fish\' to the file \'/etc/shells\'.
 	@echo \* use the command \'chsh -s $(DESTDIR)$(bindir)/fish\'.
-	@echo
+	@echo ""
 	@echo To set your colors, run \'fish_config\'
 	@echo To scan your man pages for completions, run \'fish_update_completions\'
 	@echo To autocomplete command suggestions press Ctrl + F or right arrow key.
-	@echo
+	@echo ""
 	@echo Have fun!
 .PHONY: install-force
 
@@ -646,8 +650,8 @@ install-force: all install-translations
 # Uninstall this fish version
 #
 
-uninstall: uninstall-translations
-	-for i in $(PROGRAMS); do \
+uninstall-this-fish-version: uninstall-translations
+	-for i in $(FISH_PROGS); do \
 		rm -f $(DESTDIR)$(bindir)/$$i; \
 	done;
 	-rm -f $(DESTDIR)$(bindir)/xsel
@@ -661,7 +665,7 @@ uninstall: uninstall-translations
 	-for i in $(MANUALS); do \
 		rm -rf $(DESTDIR)$(mandir)/man1/`basename $$i`*; \
 	done;
-.PHONY: uninstall
+.PHONY: uninstall-this-fish-version
 
 
 #
@@ -804,9 +808,9 @@ dist: fish-@PACKAGE_VERSION@.tar.bz2
 # Build the RPM spec file.
 #
 
-fish.spec: fish.spec.in
+regen_fish_spec: fish.spec.in
 	./config.status
-
+.PHONY: regen_fish_spec
 
 
 #
@@ -816,7 +820,7 @@ fish.spec: fish.spec.in
 
 rpm: fish-@PACKAGE_VERSION@.tar.bz2 fish.spec
 	@if which rpmbuild; then true; else \
-		echo Could not find the rpmbuild command, needed to build an rpm; \
+		echo Failed to find the rpmbuild command, needed to build an rpm; \
 		echo You may be able to install it using the following command:; \
 		echo \'yum install rpm-build\'; \
 		false; \
@@ -834,14 +838,15 @@ rpm: fish-@PACKAGE_VERSION@.tar.bz2 fish.spec
 #
 
 #
-# distclean should restore the tree to the state right after extracting a tarball.
+# distclean should restore the tree to the state right after extracting a
+# tarball.
 #
 
-distclean: clean
+distclean-local: clean-local
 	rm -f fish.spec
 	rm -f config.status config.log config.h Makefile
 	rm -rf $(XSEL)
-.PHONY: distclean
+.PHONY: distclean-local
 
 
 #
@@ -853,11 +858,11 @@ distclean: clean
 # We provide pre-built docs in the tarball, and if they get
 # deleted we won't be able to regenerate them
 
-clean:
+clean-local:
 	rm -f *.o doc.h doc.tmp doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr
 	rm -f $(GENERATED_INTERN_SCRIPT_FILES)
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
-	rm -f $(PROGRAMS) fish_tests key_reader
+	rm -f $(FISH_PROGS) fish_tests key_reader
 	rm -f command_list.txt toc.txt
 	rm -f doc_src/index.hdr doc_src/commands.hdr
 	rm -f fish-@PACKAGE_VERSION@.tar
@@ -869,7 +874,7 @@ clean:
 	rm -rf fish-@PACKAGE_VERSION@
 	rm -f $(TRANSLATIONS)
 	test ! -d "$(XSEL)" || make -C $(XSEL) clean
-.PHONY: clean
+.PHONY: clean-local
 
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
