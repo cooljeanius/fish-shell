@@ -82,10 +82,14 @@ PROJECT_NUMBER=2.0.0
 INPUT=.
 OUTPUT_DIRECTORY=$OUTPUTDIR
 QUIET=YES
+WARNINGS=NO
+PAPER_TYPE=a4
 EOF
 );
 
-# echo "$DOXYPARAMS"
+if test "x${DEBUG_DOXYGEN}" = "xYES"; then
+    echo "DOXYPARAMS are ${DOXYPARAMS}"
+fi
 
 # Clear out the output directory first
 find "${OUTPUTDIR}" -name "*.1" -delete
