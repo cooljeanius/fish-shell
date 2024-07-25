@@ -723,6 +723,13 @@ uninstall-translations:
 #
 
 fish: $(FISH_OBJS) fish.o
+	for f in $(FISH_OBJS); do \
+	  if test -e $${f}; then \
+	    stat $${f}; \
+	  else \
+	    $(MAKE) $${f}; \
+	  fi; \
+	done
 	$(CXX) $(FISH_OBJS) fish.o $(LDFLAGS_FISH) -o $@
 
 

@@ -17,14 +17,13 @@ AC_CONFIG_MACRO_DIR([m4])dnl
 
 #
 # preserve configure arguments for xsel. This breaks if arguments 
-# contain whitespace, so avoid doing that. 
+# contain whitespace, so please refrain from doing that. 
 #
-
 conf_arg=$@
 
-#
-# List of output variables produced by this configure script
-#
+dnl#
+dnl# List of output variables produced by this configure script
+dnl#
 
 AC_SUBST([docdir])dnl
 AC_SUBST([HAVE_GETTEXT])dnl
@@ -44,7 +43,6 @@ AC_SUBST([XSEL_BIN])dnl
 AC_SUBST([XSEL_MAN_PATH])dnl
 
 
-
 #
 # If needed, run autoconf to regenerate the configure file
 #
@@ -52,7 +50,6 @@ AC_SUBST([XSEL_MAN_PATH])dnl
 # version of configure, we never again need to worry about manually
 # running autoconf to handle an updates configure.ac.
 #
-
 AC_MSG_CHECKING([if autoconf needs to be run])
 if test configure -ot configure.ac; then
   AC_MSG_RESULT([yes])
@@ -81,7 +78,6 @@ fi
 # This makes sure we never ever have to run autoheader manually. It
 # will be run whenever needed automatically.
 #
-
 AC_MSG_CHECKING([if autoheader needs to be run])
 if test ! -f ./config.h.in -o config.h.in -ot configure.ac; then
   AC_MSG_RESULT([yes])
@@ -109,9 +105,8 @@ fi
 # It also helps FreeBSD which puts libiconv in /usr/local/lib
 
 for i in /usr/pkg /sw /opt /opt/sw /opt/local /usr/local /opt/homebrew; do
-
   AC_MSG_CHECKING([for readable ${i}/include include directory])
-  if test -d ${i}/include -a -r ${i}/include; then
+  if test -d ${i}/include && test -r ${i}/include; then
     AC_MSG_RESULT([yes])
     CXXFLAGS="${CXXFLAGS} -I${i}/include/"
     CFLAGS="${CFLAGS} -I${i}/include/"
@@ -120,7 +115,7 @@ for i in /usr/pkg /sw /opt /opt/sw /opt/local /usr/local /opt/homebrew; do
   fi
 
   AC_MSG_CHECKING([for readable ${i}/lib library directory])
-  if test -d ${i}/lib -a -r ${i}/lib; then
+  if test -d ${i}/lib && test -r ${i}/lib; then
     AC_MSG_RESULT([yes])
     LDFLAGS="${LDFLAGS} -L${i}/lib/ -Wl,-rpath,${i}/lib/"
   else
@@ -128,13 +123,12 @@ for i in /usr/pkg /sw /opt /opt/sw /opt/local /usr/local /opt/homebrew; do
   fi
 
   AC_MSG_CHECKING([for readable ${i}/bin command directory])
-  if test -d ${i}/bin -a -r ${i}/bin; then
+  if test -d ${i}/bin && test -r ${i}/bin; then
     AC_MSG_RESULT([yes])
     optbindirs="${optbindirs} ${i}/bin"
   else
     AC_MSG_RESULT([no])
   fi
-
 done
 
 
@@ -148,14 +142,15 @@ AC_CONFIG_HEADERS([config.h])dnl
 # This adds markup to the code that results in a few extra compile
 # time checks on recent GCC versions. It helps stop a few common bugs.
 #
-
-AH_BOTTOM([#if __GNUC__ >= 3
+AH_BOTTOM([
+#if __GNUC__ >= 3
 # define __warn_unused __attribute__((warn_unused_result))
 # define __sentinel __attribute__((sentinel))
 #else
 # define __warn_unused
 # define __sentinel
-#endif])dnl
+#endif /* __GNUC__ >= 3 */
+])dnl
 
 
 #
@@ -180,9 +175,7 @@ AX_CHECK_GNU_MAKE
 #
 # Optionally drop xsel command
 #
-
-AC_ARG_WITH(
-  [xsel],
+AC_ARG_WITH([xsel],
   [AS_HELP_STRING([--without-xsel],
       [do not build the xsel program needed for X clipboard integration.
        If build xsel, it will be configured with the same options as fish.
@@ -202,9 +195,7 @@ fi
 #
 # Optionally drop gettext support
 #
-
-AC_ARG_WITH(
-  [gettext],
+AC_ARG_WITH([gettext],
   [AS_HELP_STRING([--without-gettext],
                   [do not translate messages, even if gettext is available
   ])],
@@ -225,16 +216,13 @@ AM_GNU_GETTEXT_VERSION([0.19.8])dnl
 # where off_t can be either 32 or 64 bit, the latter size is used. On
 # other systems, this should do nothing. (Hopefully)
 #
-
 CXXFLAGS="${CXXFLAGS} -D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64"
 
 #
 # If we are using gcc, set some flags that increase the odds of the
 # compiler producing a working binary...
 #
-
 if test "${GCC}" = "yes"; then
-
   #
   # -fno-optimize-sibling-calls seems to work around a bug where
   # sending a SIGWINCH to fish on NetBSD 3.0 causes fish to exit when
@@ -258,7 +246,6 @@ if test "${GCC}" = "yes"; then
     fi
   fi
 
-
   #
   # -Wall is there to keep me on my toes
   #
@@ -269,11 +256,9 @@ if test "${GCC}" = "yes"; then
   #
   # This is needed in order to get the really cool backtraces on Linux
   #
-
   if test "x`uname`" != "xDarwin"; then
     LDFLAGS_FISH="${LDFLAGS_FISH} -rdynamic"
   fi
-
 fi
 
 
@@ -284,21 +269,17 @@ fi
 #
 
 AC_MSG_CHECKING([if we are compiling against glibc])
-AC_RUN_IFELSE(
-  [
-    AC_LANG_PROGRAM(
-      [
+AC_RUN_IFELSE([
+    AC_LANG_PROGRAM([
         #include <stdlib.h>
         #ifdef __GLIBC__
         # define STATUS 0
         #else
         # define STATUS 1
         #endif /* __GLIBC__ */
-      ],
-      [
+      ],[
         return STATUS;
-      ]
-    )
+      ])
   ],
   [glibc=yes],
   [glibc=no],
@@ -359,28 +340,21 @@ esac
 
 # Check for Solaris curses tputs having fixed length parameter list.
 AC_MSG_CHECKING([if we are using non varargs tparm.])
-AC_COMPILE_IFELSE(
-  [
-    AC_LANG_PROGRAM(
-      [
+AC_COMPILE_IFELSE([
+    AC_LANG_PROGRAM([
         #include <curses.h>
         #include <term.h>
-      ],
-      [
+      ],[
         tparm("");
-      ]
-    )
+      ])
   ],
   [tparm_solaris_kludge=no],
-  [tparm_solaris_kludge=yes]
-)
+  [tparm_solaris_kludge=yes])
+
 if test "x${tparm_solaris_kludge}" = "xyes"; then
   AC_MSG_RESULT([yes])
-  AC_DEFINE(
-    [TPARM_SOLARIS_KLUDGE],
-    [1],
-    [Define to 1 if tparm accepts a fixed amount of paramters.]
-  )
+  AC_DEFINE([TPARM_SOLARIS_KLUDGE],[1],
+    [Define to 1 if tparm accepts a fixed amount of paramters.])
 else
   AC_MSG_RESULT([no])
 fi
@@ -452,11 +426,8 @@ AC_CHECK_FILES([/proc/self/stat])dnl
 # way wgetopt can be dropped into any project without requiring i18n.
 #
 
-AC_DEFINE(
-  [HAVE_TRANSLATE_H],
-  [1],
-  [Define to 1 if the wgettext function should be used for translating strings.]
-)
+AC_DEFINE([HAVE_TRANSLATE_H],[1],
+  [Define to 1 if the wgettext function should be used for translating strings.])
 
 
 #
@@ -607,17 +578,12 @@ fi
 gt_TYPE_WCHAR_T
 gt_TYPE_WINT_T
 
-AC_CHECK_HEADER(
-  [regex.h],
+AC_CHECK_HEADER([regex.h],
   [
-    AC_DEFINE(
-      [HAVE_REGEX_H],
-      [1],
-      [Define to 1 if you have the <regex.h> header file.]
-    )
+    AC_DEFINE([HAVE_REGEX_H],[1],
+      [Define to 1 if you have the <regex.h> header file.])
   ],
-  [AC_MSG_ERROR([Could not find the header regex.h, needed to build fish])]
-)
+  [AC_MSG_ERROR([Could not find the header regex.h, needed to build fish])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_INLINE
@@ -673,7 +639,6 @@ for i in "" "-D_POSIX_C_SOURCE=200112L" "-D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=2
   # and Posix functionality. If this program works, then everything
   # should work. Hopefully.
   #
-
   AC_LINK_IFELSE([AC_LANG_PROGRAM([[
       #include <stdlib.h>
       #include <stdio.h>
@@ -703,7 +668,7 @@ for i in "" "-D_POSIX_C_SOURCE=200112L" "-D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=2
       /* As above (under at least Linux and FreeBSD). */
       # include <sys/ioctl.h>
       #endif /* HAVE_SYS_IOCTL_H */
-    ]], [[
+    ]],[[
       /* Avert high-level optimisation, by making the program's
        * return value depend on all tested identifiers. */
       long ret = 0;
@@ -732,11 +697,10 @@ for i in "" "-D_POSIX_C_SOURCE=200112L" "-D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=2
   else
     AC_MSG_RESULT([no])
   fi
-
 done
 
 #
-# We didn't find any combination of switches that worked - revert to
+# We failed to find any combination of switches that worked - revert to
 # no switches and hope that the fallbacks work.  A warning will be
 # printed at the end of the configure script.
 #
@@ -786,22 +750,18 @@ fi
 #
 
 AC_MSG_CHECKING([if realpath accepts null for its second argument])
-AC_RUN_IFELSE(
-  [
-    AC_LANG_PROGRAM(
-      [
+AC_RUN_IFELSE([
+    AC_LANG_PROGRAM([
         #include <limits.h>
         #include <errno.h>
         #include <stdlib.h>
-      ],
-      [
+      ],[
         int status;
         char *res;
         res = realpath("somefile", 0);
         status = !((res != 0) || errno == ENOENT);
         exit(status);
-      ]
-    )
+      ])
   ],
   [have_realpath_null=yes],
   [have_realpath_null=no],
@@ -809,11 +769,8 @@ AC_RUN_IFELSE(
 
 if test "${have_realpath_null}" = "yes"; then
   AC_MSG_RESULT([yes])
-  AC_DEFINE(
-    [HAVE_REALPATH_NULL],
-    [1],
-    [Define to 1 if realpath accepts null for its second argument.]
-  )
+  AC_DEFINE([HAVE_REALPATH_NULL],[1],
+    [Define to 1 if realpath accepts null for its second argument.])
 else
   AC_MSG_RESULT([no])
 fi
@@ -824,10 +781,8 @@ fi
 #
 
 AC_MSG_CHECKING([if struct winsize and TIOCGWINSZ exist])
-AC_LINK_IFELSE(
-  [
-    AC_LANG_PROGRAM(
-      [
+AC_LINK_IFELSE([
+    AC_LANG_PROGRAM([
         #ifdef HAVE_SYS_TERMIOS_H
         # include <sys/termios.h>
         #endif /* HAVE_SYS_TERMIOS_H */
@@ -835,22 +790,17 @@ AC_LINK_IFELSE(
         #ifdef HAVE_SYS_IOCTL_H
         # include <sys/ioctl.h>
         #endif /* HAVE_SYS_IOCTL_H */
-      ],
-      [
+      ],[
         struct winsize termsize = {0};
         TIOCGWINSZ;
-      ]
-    )
-  ],
-  [
+      ])
+  ],[
     AC_MSG_RESULT([yes]);
     AC_DEFINE([HAVE_WINSIZE],[1],
               [Define to 1 if the winsize struct and TIOCGWINSZ macro exist])
-  ],
-  [
+  ],[
     AC_MSG_RESULT([no])
-  ]
-)
+  ])dnl
 
 
 #
@@ -859,35 +809,26 @@ AC_LINK_IFELSE(
 #
 
 if test "${ac_cv_func_fwprintf}" = "yes"; then
-
   AC_MSG_CHECKING([if fwprintf is broken])
-  AC_RUN_IFELSE(
-    [
-      AC_LANG_PROGRAM(
-        [
+  AC_RUN_IFELSE([
+      AC_LANG_PROGRAM([
           #include <stdlib.h>
           #include <stdio.h>
           #include <locale.h>
           #include <wchar.h>
-        ],
-        [
+        ],[
           setlocale(LC_ALL, "");
           fwprintf(stderr, L"%ls%ls", L"", L"fish:");
-        ]
-      )
-    ],
-    [
+        ])
+    ],[
       AC_MSG_RESULT([no])
-    ],
-    [
+    ],[
       AC_MSG_RESULT([yes])
       AC_DEFINE([HAVE_BROKEN_FWPRINTF],[1],
                 [Define to 1 one if the implemented fwprintf is broken])
-    ],
-    [
+    ],[
       AC_MSG_WARN([cannot check for broken fwprintf when cross-compiling])
     ])
-
 fi
 
 
@@ -905,11 +846,8 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 ])
 if test "${have__nl_msg_cat_cntr}" = "yes"; then
   AC_MSG_RESULT([yes])
-  AC_DEFINE(
-    [HAVE__NL_MSG_CAT_CNTR],
-    [1],
-    [Define to 1 if the _nl_msg_cat_cntr symbol is exported.]
-  )
+  AC_DEFINE([HAVE__NL_MSG_CAT_CNTR],[1],
+    [Define to 1 if the _nl_msg_cat_cntr symbol is exported.])
 else
   AC_MSG_RESULT([no])
 fi
@@ -926,11 +864,8 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 ])
 if test "${have___environ}" = "yes"; then
   AC_MSG_RESULT([yes])
-  AC_DEFINE(
-    [HAVE___ENVIRON],
-    [1],
-    [Define to 1 if the __environ symbol is exported.]
-  )
+  AC_DEFINE([HAVE___ENVIRON],[1],
+    [Define to 1 if the __environ symbol is exported.])
 else
   AC_MSG_RESULT([no])
 fi
@@ -948,21 +883,15 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
         0, 0, 0, 0
       }
     ;
-    int opt = getopt_long( 0,
-                 0,
-                 0,
-                 long_options,
-                 0 );
+    int opt = getopt_long(0, 0, 0,
+                 long_options, 0);
 
   ]])],[have_working_getopt_long=yes],[have_working_getopt_long=no
 ])
 if test "${have_working_getopt_long}" = "yes"; then
   AC_MSG_RESULT([yes])
-  AC_DEFINE(
-    [HAVE_WORKING_GETOPT_LONG],
-    [1],
-    [Define to 1 if getopt_long exists and works.]
-  )
+  AC_DEFINE([HAVE_WORKING_GETOPT_LONG],[1],
+    [Define to 1 if getopt_long exists and works.])
 else
   AC_MSG_RESULT([no])
 fi
@@ -974,11 +903,8 @@ AC_MSG_CHECKING([If del_curterm is broken])
 case ${target_os} in
   *bsd*)
     AC_MSG_RESULT([yes])
-    AC_DEFINE(
-      [HAVE_BROKEN_DEL_CURTERM],
-      [1],
-      [del_curterm is broken, redefine it to a no-op to avoid a double-free bug]
-    )
+    AC_DEFINE([HAVE_BROKEN_DEL_CURTERM],[1],
+      [del_curterm is broken, redefine it to a no-op to avoid a double-free bug])
     ;;
   *)
     AC_MSG_RESULT([no])
