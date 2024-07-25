@@ -1,5 +1,6 @@
 .gitattributes export-ignore
 .gitignore export-ignore
+aclocal.m4 linguist-generated
 /build_tools export-ignore
 build-aux/compile linguist-vendored
 build-aux/config.guess linguist-vendored
@@ -7,3 +8,5 @@ build-aux/config.rpath linguist-vendored
 build-aux/config.sub linguist-vendored
 build-aux/install-sh linguist-vendored
 build-aux/missing linguist-vendored
+m4/ax_check_gnu_make.m4 linguist-vendored
+Makefile.in linguist-generated

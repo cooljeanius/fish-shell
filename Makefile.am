@@ -1,5 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4 --install
 SUBDIRS = po
+DISTCLEANFILES = *~ build-aux/*~ po/*~
 # Copyright (C) 2005-2006 Axel Liljencrantz
 #
 # This program is free software; you can redistribute it and/or modify
@@ -846,6 +847,7 @@ distclean-local: clean-local
 	rm -f fish.spec
 	rm -f config.status config.log config.h Makefile
 	rm -rf $(XSEL)
+	rm -rf autom4te.cache || rmdir autom4te.cache
 .PHONY: distclean-local
 
 
